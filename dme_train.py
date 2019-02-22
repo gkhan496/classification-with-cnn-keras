@@ -78,7 +78,7 @@ a = []
 for i in x:
     a.append((int(x[0].split()[]))
 print(int(x[0].split()[1]))"""
-fname = "kernel_size.txt"
+"""fname = "kernel_size.txt"
 single = []
 double = []
 
@@ -160,8 +160,8 @@ for t in content:
                 model2.pop()
 
             model2.pop()
-            model2.pop()
-"""fname = "kernel_size.txt"
+            model2.pop()"""
+fname = "kernel_size.txt"
 single = []
 double = []
 
@@ -267,7 +267,7 @@ for t in content:
                 model.pop()
 
             model.pop()
-            model.pop()"""
+            model.pop()
 
 K.clear_session()
 mst_acc = 0
