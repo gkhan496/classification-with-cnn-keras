@@ -31,7 +31,7 @@ def train_data_with_label():
     for i in tqdm(os.listdir(train_data)):
         path = os.path.join(train_data,i)
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-        img = cv2.resize(img,(128,128))
+        img = cv2.resize(img,(227,227))
         train_images.append([np.array(img), one_hot_label(i)])
     shuffle(train_images)
     return train_images
@@ -41,7 +41,7 @@ def test_data_with_label():
     for i in tqdm(os.listdir(test_data)):
         path = os.path.join(test_data,i)
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-        img = cv2.resize(img,(128,128))
+        img = cv2.resize(img,(227,227))
         test_images.append([np.array(img), one_hot_label(i)])
     shuffle(test_images)
     return test_images
@@ -49,9 +49,9 @@ def test_data_with_label():
 
 training_images = train_data_with_label()
 testing_images = test_data_with_label()
-tr_img_data = np.array([i[0] for i in training_images]).reshape(-1,128,128,1) 
+tr_img_data = np.array([i[0] for i in training_images]).reshape(-1,227,227,1) 
 tr_lbl_data = np.array([i[1] for i in training_images])
-tst_img_data = np.array([i[0] for i in testing_images]).reshape(-1,128,128,1)
+tst_img_data = np.array([i[0] for i in testing_images]).reshape(-1,227,227,1)
 tst_lbl_data = np.array([i[1] for i in testing_images])
 
 """mySQLconnection = conn.connect(host='localhost',
@@ -278,24 +278,20 @@ for row in a:
         sayac= sayac+1
 
         model = Sequential()
-
-        model.add(InputLayer(input_shape=[128,128,1]))
+        #for 3-layers
+        model.add(InputLayer(input_shape=[227,227,1]))
         model.add(Conv2D(filters=32,kernel_size=row[0],strides=1,activation='relu'))
-        #model.add(Conv2D(filters=32,kernel_size=row[0],strides=1,activation='relu'))
         model.add(MaxPool2D(pool_size=2,strides=(2, 2)))
 
         model.add(Conv2D(filters=64,kernel_size=row[1],strides=1,activation='relu'))
-        #model.add(Conv2D(filters=64,kernel_size=row[1],strides=1,activation='relu'))
         model.add(MaxPool2D(pool_size=2,strides=(2, 2)))
 
 
         model.add(Conv2D(filters=128,kernel_size=row[2],strides=1,activation='relu'))
-        #model.add(Conv2D(filters=128,kernel_size=row[2],strides=1,activation='relu'))
         model.add(MaxPool2D(pool_size=2,strides=(2, 2)))
         
         model.add(Flatten())
         model.add(Dropout(0.5))
-        model.add(Dense(row[3]*row[3],activation='relu'))
         model.add(Dense(row[3]*row[3],activation='relu'))
         model.add(Dense(2,activation='softmax'))
         Optimizer = Adam(lr=0.75e-5)
@@ -310,7 +306,6 @@ for row in a:
         model.summary()
 
 
-        #model.save_weights("modelDME.h5")
         dme = 0
         normal = 0
         #fig = plt.figure(figsize=(10,10))
@@ -319,7 +314,7 @@ for row in a:
         for cnt, data in enumerate(testing_images[:]):
             img = data[0]
             y_test.append(data[1][1])
-            data = img.reshape(1,128,128,1)
+            data = img.reshape(1,227,227,1)
             model_out = model.predict([data])
             y_pred.append(np.argmax(model_out))
             if np.argmax(model_out) == 1:
@@ -359,17 +354,23 @@ for row in a:
         if mst_acc < accuracy:
             mst_acc = accuracy
             model.save_weights("modelDME.h5")
-        f= open("trainme.txt","a+")
-        strr = str(row[0])+"-"+str(row[1])+"-"+str(row[2])
-        """f.write(str(sayac))
-        f.write("-")
-        """
-        f.write(strr)
-        f.write(":")
-        f.write(str(accuracy)+":"+str(recall_sensitivity)+":"+str(specificity)+":"+str(f1score)+":"+str(true_positive_rate)+":"+str(false_positive_rate))
+            f= open("trainme.txt","a+")
+            strr = str(row[0])+"-"+str(row[1])+"-"+str(row[2])
+            f.write("Best Acc : "+strr)
+            f.write(":")
+            f.write(str(accuracy)+":"+str(recall_sensitivity)+":"+str(specificity)+":"+str(f1score)+":"+str(true_positive_rate)+":"+str(false_positive_rate))
 
-        f.write('\n')
-        f.close()
+            f.write('\n')
+            f.close()
+        else:
+            f= open("trainme.txt","a+")
+            strr = str(row[0])+"-"+str(row[1])+"-"+str(row[2])
+            f.write(strr)
+            f.write(":")
+            f.write(str(accuracy)+":"+str(recall_sensitivity)+":"+str(specificity)+":"+str(f1score)+":"+str(true_positive_rate)+":"+str(false_positive_rate))
+
+            f.write('\n')
+            f.close()
         #sql = "INSERT INTO multi_train (model_id,acc) VALUES(%s,%s)"
         try:
             if sayac % 250 == 0:
