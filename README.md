@@ -1,3 +1,6 @@
-##DME CLASSIFICATION WITH CNN
+## DME CLASSIFICATION WITH CNN
 
-Accurarcy : 99.2 for 61.000 OCT images (train) and 1000 OCT images(test)
+
+Train : 61.000
+Test : 1.000
+Accurarcy : 99.2
