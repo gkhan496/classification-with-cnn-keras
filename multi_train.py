@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import keras.backend as K
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
 train_data = 'dme_data/train'
 test_data = 'dme_data/test'
@@ -75,7 +77,7 @@ for i in content:
 
     else:
         single.append(i)
-a = []
+kernel_sizes = []
 #save = save_database()
 def conv_3f(pool):
     if pool % 2 == 0:
@@ -86,8 +88,7 @@ def conv_3f(pool):
             model2.summary()
             last_layer = model2.layers[5].output.shape[1]
             val = (conv_1,conv_2,conv_3,int(last_layer))
-            a.append(val)
-            #save.save_models(val)
+            kernel_sizes.append(val)
             model2.pop()
             model2.pop()      
     else:
@@ -98,8 +99,7 @@ def conv_3f(pool):
             model2.summary()
             last_layer = model2.layers[5].output.shape[1]
             val = (conv_1,conv_2,conv_3,int(last_layer))
-            a.append(val)
-            #save.save_models(val)
+            kernel_sizes.append(val)
             model2.pop()
             model2.pop() 
 
@@ -139,15 +139,13 @@ for t in content:
             model2.pop()
 
 K.clear_session()
-mst_acc = 0
-sayac=0
-#b = a[110:]
-for row in a:
-    for p in range(5):
-        sayac= sayac+1
+best_acc = 0
 
+for row in kernel_sizes:
+    
+    for p in range(5):
+        
         model = Sequential()
-        #for 3-layers
         model.add(InputLayer(input_shape=[227,227,1]))
         model.add(Conv2D(filters=32,kernel_size=row[0],strides=1,activation='relu'))
         model.add(MaxPool2D(pool_size=2,strides=(2, 2)))
@@ -165,8 +163,7 @@ for row in a:
         model.add(Dense(2,activation='softmax'))
         Optimizer = Adam(lr=0.75e-5)
 
-        #model.compile(optimizer=Optimizer,loss='categorical_crossentropy',metrics=['accuracy']) #Parametrelerine bak
-        #model.fit(x=tr_img_data,y=tr_lbl_data,epochs=75,batch_size=100) #Cross entropy grafiği MAE MSE
+        #model.compile(optimizer=Optimizer,loss='categorical_crossentropy',metrics=['accuracy']) 
         #checkpoint = keras.callbacks.ModelCheckpoint('model-{epoch:03d}.h5', verbose=1, monitor='val_acc',save_best_only=True, mode='auto')  
 
         model.compile(optimizer=Optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
@@ -177,7 +174,6 @@ for row in a:
 
         dme = 0
         normal = 0
-        #fig = plt.figure(figsize=(10,10))
         y_pred = []
         y_test = []
         for cnt, data in enumerate(testing_images[:]):
@@ -190,13 +186,6 @@ for row in a:
                 str_label = 'DME'
             else:
                 str_label = 'NORMAL'
-            #plt.imshow(img)
-            #plt.title(str_label)
-            #plt.show()
-            #print(np.argmax(model_out))
-
-        from sklearn.metrics import confusion_matrix #y_test / y_pred
-        import seaborn as sns
 
         confusion_mtx = confusion_matrix(y_test, y_pred)
         TN = confusion_mtx[0][0]
@@ -220,8 +209,8 @@ for row in a:
         print("True positive rate : ",true_positive_rate)
         print("False negative rate : ",false_positive_rate)
 
-        if mst_acc < accuracy:
-            mst_acc = accuracy
+        if best_acc < accuracy:
+            best_acc = accuracy
             model.save_weights("modelDME.h5")
             f= open("confusionmat.txt","a+")
             strr = str(row[0])+"-"+str(row[1])+"-"+str(row[2])
@@ -240,8 +229,8 @@ for row in a:
 
             f.write('\n')
             f.close()
-        #sql = "INSERT INTO multi_train (model_id,acc) VALUES(%s,%s)"
-        try:
+
+        """try:
             if sayac % 250 == 0:
                 gauth = GoogleAuth()
                 gauth.LocalWebserverAuth()
@@ -250,13 +239,11 @@ for row in a:
                 file1.SetContentFile("confusionmat.txt")
                 file1.Upload()
         except:
-            continue
+            continue"""
         
         K.clear_session()
 
-        #cursor.execute(sql,arr)  
-        #mySQLconnection.commit()
-        
+        ##PLOTTING
         """
         sns.heatmap(confusion_mtx, annot=True, fmt="d");
         plt.show()"""
@@ -264,5 +251,4 @@ for row in a:
         """model_json = model.to_json()
         with open("modelDME.json", "w") as json_file:
             json_file.write(model_json)
-
         """
